@@ -62,7 +62,21 @@ def createvm(name,ostype=None,register=False,basefolder=None,uuid=None):
     # TODO: change to return VM object
     return subprocess.check_output(cmd)
 
+# Public: Register a VM from its XML file
+#
+# filename - String giving the filepath to the XML file to use
+#
+# Returns True if the registration succeeded.
+# Raises RegistrationError otherwise
+def registervm(self, filename):
+    args = [constants.cmd, "registervm", filename]
 
+    try:
+        result = subprocess.check_output(args)
+    except CalledProcessError as e:
+        raise RegistrationError(filename, e)
+
+    return True
 
 # Public: Class that wraps a Virtualbox VM and lets you interact with it and
 # configure. Does not interact with the Guest OS in any way.
@@ -188,4 +202,20 @@ class VM(object):
         parsed['string'] = info
         return parsed
 
-    
+
+    # Public: Unregister the VM and optionally delete
+    #
+    # delete - Boolean to delete the VM as well as unregister
+    #
+    # Returns True if unregistering was successful
+    # Raises the generic CommandError otherwise
+    def unregistervm(self, delete=False):
+        args = [constants.cmd, "unregistervm", self.uuid]
+        if delete:
+            args += ["--delete"]
+        try:
+            result = subprocess.check_output(args)
+        except CalledProcessError as e:
+            raise CommandError(args, e)
+
+        return True
