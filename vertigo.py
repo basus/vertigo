@@ -3,9 +3,23 @@ import constants
 
 from error import *
 
+# functions that don't fall into the VM class
+
+# Return the current Virtualbox version as a string
 def version():
     return subprocess.check_output([constants.cmd, "-v"])
 
+# Public: List available virtual machines, virtual devices and their relevant
+# properties. Currently only returns a string representation. Will eventually
+# return a more structured format, probably a dictionary
+#
+# option - the resource to list. Possible options listed in constants.py and the
+#          VBoxManage manual
+# longform - supply the --long switch to VBoxManage. Only relevant for a few
+# options
+#
+# Returns a string representation of the requested option, or a dictionary of
+# all of them
 def list(option="all", longform=False):
 
     cmd = [constants.cmd, "list"]
@@ -24,7 +38,15 @@ def list(option="all", longform=False):
     else:
         return subprocess.check_output(cmd + [option])
 
-
+# Public: Create a new virtual with the given options.
+#
+# name - String that is the name of the new VM
+# ostype - String that should be the OS type
+# register - Boolean whether or not to register this VM in Virtualbox
+# basefolder - String giving the path where to store the VM files
+# uuid - Hexadecimal String to be the UUID of the VM
+#
+# Returns a VM object (eventually) wrapping the VM 
 def createvm(name,ostype=None,register=False,basefolder=None,uuid=None):
     cmd = [constants.cmd, "createvm", "--name", name]
 
@@ -40,8 +62,21 @@ def createvm(name,ostype=None,register=False,basefolder=None,uuid=None):
     # TODO: change to return VM object
     return subprocess.check_output(cmd)
 
+
+
+# Public: Class that wraps a Virtualbox VM and lets you interact with it and
+# configure. Does not interact with the Guest OS in any way.
 class VM(object):
 
+    # Public: Initialize a VM object to wrap a particular Virtualbox VM. At
+    # least one of name or UUID must be provided to locate the VM and the VM
+    # referenced must already exist.
+    #
+    # name - String that is the name of VirtualBox VM.
+    # uuid - Hexadecimal String that is the UUID of the VirtualBox VM.
+    #
+    # Returns a VM object wrapping the VirtualBox VM
+    # Raises UnknownVMError if VM corresponding to the name or UUID is not found
     def __init__(self, name=None, uuid=None):
         if name == None and uuid == None:
             raise UnknownVMError(name, uuid)
@@ -62,7 +97,17 @@ class VM(object):
         self.uuid = self.info['UUID']
 
 
-    def parse_info(self, rawinfo=None,machine=True):
+    # Public: Parse a raw VM information string as returned by showvminfo and
+    # turn it into a machine-usable Python dictionary.
+    #
+    # rawinfo - String that is the raw information dump from showvminfo
+    # machine - Boolean saying if the raw information is from using the
+    #           machinereadable switch
+    # pythonize - Boolean saying if values should be swapped with their Python
+    #             equivalents (True for on, False for off, None for <none>)
+    #
+    # Returns a dictionary of information keys to their provided values
+    def parse_info(self, rawinfo=None,machine=True, pythonize=True):
         if not rawinfo:
             rawinfo = self.vminfo
 
@@ -98,26 +143,37 @@ class VM(object):
                 key = parts[0].strip()
                 value = parts[1].strip(' \"')
 
-            # Turn numbers to ints
-            try:
-                value = int(value)
-            except ValueError:
-                pass
+            if pythonize:
+                # Turn numbers to ints
+                try:
+                    value = int(value)
+                except ValueError:
+                    pass
 
-            # Turn on/off/none to True/False/None
-            if value == "on":
-                value = True
-            elif value == "off":
-                value = False
-            elif value == "none":
-                value = None
+                # Turn on/off/none to True/False/None
+                if value == "on":
+                    value = True
+                elif value == "off":
+                    value = False
+                elif value == "none":
+                    value = None
 
             info[key] = value
 
         return info
 
 
-    def showvminfo(self, details=False, machine=True):
+    # Public: Create a Python dictionary representing the output from the
+    # showvminfo command. Uses parse_info to parse the raw string and places the
+    # raw string into a 'string' key in the dictionary.
+    #
+    # details - Boolean to use the --details flag
+    # machine - Boolean to use the --machinereadable flag (easier to parse)
+    # pythonize - Boolean saying if values should be swapped with their Python
+    #             equivalents (True for on, False for off, None for <none>)
+    #
+    # Returns the parsed dictionary representation
+    def showvminfo(self, details=False, machine=True, pythonize=True):
         args = [constants.cmd, "showvminfo"]
 
         if details:
@@ -128,7 +184,8 @@ class VM(object):
         args += [self.uuid]
 
         info = subprocess.check_output(args)
-        parsed =  self.parse_info(info, machine)
+        parsed =  self.parse_info(info, machine, pythonize)
         parsed['string'] = info
         return parsed
 
+    

@@ -12,9 +12,10 @@ tool:
   - It allows your Python program to interact with a clean Python API instead of
   dealing with the command line.
 
-Vertigo is not meant to be a VM creaton, provisioning, or deployment
-tool. Vagrant is a much better tool for those purposes. Vertigo is best used
-when you already have your VMs created and set up but need to programmatically
-start, shutdown or configure them with the full flexibility of VBoxManage.
+Vertigo does not interact with the Guest operating system at all. Thus Vertigo
+is not meant to be a VM provisioning or deployment tool. Vagrant is a much
+better tool for those purposes. Vertigo is best used when you already have your
+VMs created and set up but need to programmatically start, shutdown or configure
+them with the full flexibility of VBoxManage.
 
 
