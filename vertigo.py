@@ -219,3 +219,49 @@ class VM(object):
             raise CommandError(args, e)
 
         return True
+
+
+    # Public: Make modifications to the current VM
+    #
+    # option - string option to be modified
+    # optargs - List of arguments relevant to the option
+    #
+    # Returns the output of the modifyvm command
+    # Raises UnknownOptionError if the option or arguments are incorrect
+    # Raises CommandError if the modifyvm command fails for some reason
+    def modifyvm(self,option=None,*optargs):
+
+        if not option in constants.modopts:
+            raise UnknownOptionError("modifyvm", option)
+        else:
+            args = [cmd, "modifyvm"]
+
+        if option in constants.modboolopts:
+            if optargs[0] == True or optargs[0] == "on":
+                args += ["on"]
+            elif optargs[1] == False or optargs[0] == "off":
+                args += ["off"]
+            else:
+                raise UnknownOptionError("modifyvm " + option, optargs[0])
+
+        elif option in constants.modindexopts:
+            try:
+                index = int(optargs[0])
+            except ValueError:
+                raise UnknownOptionError("modifyvm " + option, optargs[0])
+            args += [option + str(index)] + optargs
+
+        elif option in constants.modenumopts.keys():
+            if not optargs[0] in constants.modenumopts[option]:
+                raise UnknownOptionError("modifyvm " + option, optargs[0])
+            else:
+                args += [option, optargs[0]]
+        else:
+            args += [option] + optargs
+
+        try:
+            result = subprocess.check_output(args)
+        except CalledProcessError as e:
+            raise CommandError(args, e)
+
+        return result
