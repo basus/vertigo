@@ -1,5 +1,6 @@
 # Constants for use by the rest of the Vertigo system
 
+import re
 # The basic VBoxManage command
 cmd = "VBoxManage"
 
@@ -50,7 +51,7 @@ modindexopts = ["boot", "nic", "nictype", "cableconnected", "nictrace",
 modenumopts = {
     "firmware" : ["bios", "efi", "efi32", "efi64"],
     "chipset" : ["ich9", "piix3"],
-    "boot" : [None. "none", "floppy", "dvd", "disk", "net"],
+    "boot" : [None, "none", "floppy", "dvd", "disk", "net"],
     "nic" : [None, "none", "null", "nat", "bridged", "intnet", "generic"],
     "nictype" : ["Am79C970A", "Am79C973"],
     "nicpromisc": ["deny", "allow-vms", "allow-all"],
@@ -63,3 +64,7 @@ modenumopts = {
     }
 
 bools = [True, False, "on", "off"]
+
+mod_to_ls = { 'uuid' : 'UUID',
+              'ostype' : 'GuestOSType',
+              }

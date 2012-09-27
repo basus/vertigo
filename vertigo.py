@@ -1,3 +1,4 @@
+import re
 import subprocess
 import constants
 
@@ -20,7 +21,7 @@ def version():
 #
 # Returns a string representation of the requested option, or a dictionary of
 # all of them
-def list(option="all", longform=False):
+def ls(option="all", longform=False):
 
     cmd = [constants.cmd, "list"]
 
@@ -73,7 +74,7 @@ def registervm(self, filename):
 
     try:
         result = subprocess.check_output(args)
-    except CalledProcessError as e:
+    except subprocess.CalledProcessError as e:
         raise RegistrationError(filename, e)
 
     return True
@@ -103,12 +104,12 @@ class VM(object):
         try:
             args = [constants.cmd, "showvminfo", "--machinereadable", argid]
             self.vminfo = subprocess.check_output(args)
-        except CalledProcessError:
+        except subprocess.CalledProcessError:
             raise UnknownVMError(name, uuid)
 
         self.info = self.parse_info(self.vminfo)
-        self.name = self.info['name']
-        self.uuid = self.info['UUID']
+        self.__name = self.info['name']
+        self.__uuid = self.info['UUID']
 
 
     # Public: Parse a raw VM information string as returned by showvminfo and
@@ -195,7 +196,7 @@ class VM(object):
         if machine:
             args += ["--machinereadable"]
 
-        args += [self.uuid]
+        args += [self.__uuid]
 
         info = subprocess.check_output(args)
         parsed =  self.parse_info(info, machine, pythonize)
@@ -210,12 +211,12 @@ class VM(object):
     # Returns True if unregistering was successful
     # Raises the generic CommandError otherwise
     def unregistervm(self, delete=False):
-        args = [constants.cmd, "unregistervm", self.uuid]
+        args = [constants.cmd, "unregistervm", self.__uuid]
         if delete:
             args += ["--delete"]
         try:
             result = subprocess.check_output(args)
-        except CalledProcessError as e:
+        except subprocess.CalledProcessError as e:
             raise CommandError(args, e)
 
         return True
@@ -231,10 +232,11 @@ class VM(object):
     # Raises CommandError if the modifyvm command fails for some reason
     def modifyvm(self,option=None,*optargs):
 
+        optargs = list(optargs)
         if not option in constants.modopts:
             raise UnknownOptionError("modifyvm", option)
         else:
-            args = [cmd, "modifyvm"]
+            args = [constants.cmd, "modifyvm", self.name]
 
         if option in constants.modboolopts:
             if optargs[0] == True or optargs[0] == "on":
@@ -249,19 +251,38 @@ class VM(object):
                 index = int(optargs[0])
             except ValueError:
                 raise UnknownOptionError("modifyvm " + option, optargs[0])
-            args += [option + str(index)] + optargs
+            args += ["--" + option + str(index)] + optargs[1:]
 
         elif option in constants.modenumopts.keys():
             if not optargs[0] in constants.modenumopts[option]:
                 raise UnknownOptionError("modifyvm " + option, optargs[0])
             else:
-                args += [option, optargs[0]]
+                args += ["--" + option, optargs[0]]
         else:
-            args += [option] + optargs
+            args += ["--" + option] + optargs
 
         try:
+            args = map(str, args)
             result = subprocess.check_output(args)
-        except CalledProcessError as e:
+        except subprocess.CalledProcessError as e:
             raise CommandError(args, e)
 
         return result
+
+    def __getattr__(self, name):
+        try:
+            value = self.info[constants.mod_to_ls[name]]
+        except KeyError:
+            value = self.info[name]
+        return value
+
+    def __setattr__(self, name, value):
+        m = re.match('([a-zA-Z]+)([0-9])', name)
+        if m:
+            name = m.group(1)
+            value = [value]
+            value.insert(0,m.group(2))
+        if name in constants.modopts:
+            self.modifyvm(name, *value)
+        self.__dict__[name] = value
+
