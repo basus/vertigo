@@ -40,3 +40,21 @@ class RegistrationError(Exception):
         filerr = "Unable to register VM from file " + filename + "\n"
         errmsg = "Returned message was:\n" + self.msg
         return filerr + errmsg
+
+# Error for closemedium
+class CloseMediumError(Exception):
+    def __init__(self, device, target, error=None):
+        self.device = device
+        self.target = target
+        if error:
+            self.msg = error.output
+        else:
+            self.msg = ""
+
+    def __str__(self):
+         e = "Cannot close device " + self.device + " with target " + self.target
+         return e + "\n" + self.msg
+
+class NoMediumError(CloseMediumError):
+    def __str__(self):
+        return self.device + " is not a valid device"

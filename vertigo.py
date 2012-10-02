@@ -6,6 +6,14 @@ from error import *
 
 # functions that don't fall into the VM class
 
+# basic utility function to execute some arguments and return the result
+def execute (args):
+    try:
+        result = subprocess.check_output(args)
+    except subprocess.CalledProcessError as e:
+        raise CommandError(args, e)
+    return result
+
 # Return the current Virtualbox version as a string
 def version():
     return subprocess.check_output([constants.cmd, "-v"])
@@ -78,6 +86,27 @@ def registervm(self, filename):
         raise RegistrationError(filename, e)
 
     return True
+
+# Public: Close a device based on a UUID or a filename
+#
+# device - one of "dvd", "floppy" or "disk"
+# target - UUID or filename
+# delete - whether or not to delete the device after closing
+#
+# Returns True if the registration succeeded.
+# Raises NoMediumError if the device type is invalid, CommandError if there's
+#        some other error
+def closemedium(self, device, target, delete=False):
+        if not device in constants.closemediumopts:
+            raise NoMediumError(device, target, delete)
+
+        args = [constants.cmd, "closemedium", target]
+        if delete:
+            args.append("--delete")
+
+        execute(args)
+        return True
+
 
 # Public: Class that wraps a Virtualbox VM and lets you interact with it and
 # configure. Does not interact with the Guest OS in any way.
@@ -310,13 +339,34 @@ class VM(object):
         else:
             args += ["--" + option] + optargs
 
-        try:
-            args = map(str, args)
-            result = subprocess.check_output(args)
-        except subprocess.CalledProcessError as e:
-            raise CommandError(args, e)
+        args = map(str, args)
+        return execute(args)
 
-        return result
+    # Public: Discard current VM state
+    #
+    # Return True if the discard happened properly
+    # Raise CommandError otherwise
+    def discardstate(self):
+        args = [constants.cmd, "discardstate", self.UUID]
+        execute(args)
+        return True
+
+    # Public: Load VM state from a given filepath
+    #
+    # filepath - String giving path to the state path
+    #
+    # Return True if the adoption succeeded
+    # Raise IOError if there is no such file
+    #       CommandError if the command fails otherwise
+    def adoptstate(self, filepath):
+        args = [constants.cmd, self.UUID]
+        if os.path.isfile(filepath):
+            args = [constants.cmd, "adopstate", self.UUID, filepath]
+        else:
+            raise IOError("No such state file: " + filepath)
+
+        execute(args)
+        return True
 
     def __getattr__(self, name):
         try:

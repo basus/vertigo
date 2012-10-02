@@ -65,7 +65,7 @@ modenumopts = {
 
 ctrlopts = ["pause", "resume", "reset", "poweroff", "savestate",
             "acpipowerbutton", "acpisleepbutton", "setlinkstate", "nic",
-            "nictrace", "nictracefile", "nicproperty". "natpf",
+            "nictrace", "nictracefile", "nicproperty", "natpf",
             "guestmemoryballoon", "gueststatisticsinterval", "usbattach",
             "usbdettach", "clipboard", "draganddrop", "vrde", "vrdeport",
             "vrdevideochannelquality", "setvideomodehint", "screenshotpng",
@@ -73,7 +73,7 @@ ctrlopts = ["pause", "resume", "reset", "poweroff", "savestate",
             "cpuexecutioncap"]
 
 ctrlindexopts = ["setlinkstate", "nic", "nictrace", "nictracefile",
-                 "nicproperty". "natpf"]
+                 "nicproperty", "natpf"]
 
 ctrlnumopts = {
     "nic" : [None, "none", "null", "nat", "bridged", "intnet", "generic"],
@@ -82,6 +82,8 @@ ctrlnumopts = {
     }
 
 ctrlboolopts = ["nictrace", "vrde"]
+
+closemediumopts = ["disk", "dvd", "floppy"]
 
 bools = [True, False, "on", "off"]
 
