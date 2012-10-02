@@ -22,7 +22,7 @@ modopts = ["name", "ostype", "memory", "pagefusion", "vram", "acpi", "ioapic",
            "nic", "nictype", "cableconnected", "nictrace", "nictracefile",
            "nicproperty", "nicspeed", "nicbootprio", "nicpromisc",
            "nicbandwidthgroup", "bridgeadapter", "intnet", "natnet|default",
-           "nicgenericdrv", "natsettings,", "natpf", "natpf", "nattftpprefix",
+           "nicgenericdrv", "natsettings,", "natpf", "nattftpprefix",
            "nattftpfile", "nattftpserver", "natbindip", "natdnspassdomain",
            "natdnsproxy", "natdnshostresolver", "nataliasmode", "macaddress",
            "mouse", "keyboard", "uart", "uartmode", "guestmemoryballoon",
@@ -62,6 +62,26 @@ modenumopts = {
     "clipboard": ["disabled", "hosttoguest", "guesttohost", "bidirectional"],
     "vrdeauthtype" : ["null", "external", "guest"]
     }
+
+ctrlopts = ["pause", "resume", "reset", "poweroff", "savestate",
+            "acpipowerbutton", "acpisleepbutton", "setlinkstate", "nic",
+            "nictrace", "nictracefile", "nicproperty". "natpf",
+            "guestmemoryballoon", "gueststatisticsinterval", "usbattach",
+            "usbdettach", "clipboard", "draganddrop", "vrde", "vrdeport",
+            "vrdevideochannelquality", "setvideomodehint", "screenshotpng",
+            "setcredentials", "teleport", "plugcpu", "unplugcpu",
+            "cpuexecutioncap"]
+
+ctrlindexopts = ["setlinkstate", "nic", "nictrace", "nictracefile",
+                 "nicproperty". "natpf"]
+
+ctrlnumopts = {
+    "nic" : [None, "none", "null", "nat", "bridged", "intnet", "generic"],
+    "clipboard": ["disabled", "hosttoguest", "guesttohost", "bidirectional"],
+    "draganddrop": ["disabled", "hosttoguest"]
+    }
+
+ctrlboolopts = ["nictrace", "vrde"]
 
 bools = [True, False, "on", "off"]
 

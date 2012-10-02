@@ -110,6 +110,7 @@ class VM(object):
         self.info = self.parse_info(self.vminfo)
         self.__name = self.info['name']
         self.__uuid = self.info['UUID']
+        self.started = False
 
 
     # Public: Parse a raw VM information string as returned by showvminfo and
@@ -269,6 +270,54 @@ class VM(object):
 
         return result
 
+    def start(self, gui="gui"):
+        args = [constants.cmd, "startvm", self.name, "--type", gui]
+        try:
+            result = subprocess.check_output(args)
+        except subprocess.CalledProcessError as e:
+            raise CommandError(args, e)
+        self.started = True
+        return result
+
+    def controlvm(self,option=None,*optargs):
+
+        optargs = list(optargs)
+        if not option in constants.ctrlopts:
+            raise UnknownOptionError("controlvm", option)
+        else:
+            args = [constants.cmd, "controlvm", self.name]
+
+        if option in constants.ctrlboolopts:
+            if optargs[0] == True or optargs[0] == "on":
+                args += ["on"]
+            elif optargs[1] == False or optargs[0] == "off":
+                args += ["off"]
+            else:
+                raise UnknownOptionError("modifyvm " + option, optargs[0])
+
+        elif option in constants.ctrlindexopts:
+            try:
+                index = int(optargs[0])
+            except ValueError:
+                raise UnknownOptionError("modifyvm " + option, optargs[0])
+            args += ["--" + option + str(index)] + optargs[1:]
+
+        elif option in constants.ctrlenumopts.keys():
+            if not optargs[0] in constants.ctrlenumopts[option]:
+                raise UnknownOptionError("modifyvm " + option, optargs[0])
+            else:
+                args += ["--" + option, optargs[0]]
+        else:
+            args += ["--" + option] + optargs
+
+        try:
+            args = map(str, args)
+            result = subprocess.check_output(args)
+        except subprocess.CalledProcessError as e:
+            raise CommandError(args, e)
+
+        return result
+
     def __getattr__(self, name):
         try:
             value = self.info[constants.mod_to_ls[name]]
@@ -282,7 +331,11 @@ class VM(object):
             name = m.group(1)
             value = [value]
             value.insert(0,m.group(2))
-        if name in constants.modopts:
+        if name in constants.modopts and not self.started:
             self.modifyvm(name, *value)
+        elif name in constants.ctrlopts and self.started:
+                self.controlvm(name, *value)
+        else:
+            pass
         self.__dict__[name] = value
 
