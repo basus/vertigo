@@ -331,13 +331,13 @@ class VM(object):
                 raise UnknownOptionError("modifyvm " + option, optargs[0])
             args += ["--" + option + str(index)] + optargs[1:]
 
-        elif option in constants.ctrlenumopts.keys():
-            if not optargs[0] in constants.ctrlenumopts[option]:
-                raise UnknownOptionError("modifyvm " + option, optargs[0])
-            else:
-                args += ["--" + option, optargs[0]]
+        # elif option in constants.ctrlenumopts.keys():
+        #     if not optargs[0] in constants.ctrlenumopts[option]:
+        #         raise UnknownOptionError("modifyvm " + option, optargs[0])
+        #     else:
+        #         args += ["--" + option, optargs[0]]
         else:
-            args += ["--" + option] + optargs
+            args += [option] + optargs
 
         args = map(str, args)
         return execute(args)
